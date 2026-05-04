@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>WOLF LABS | Time Sync (Homework)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Fonts: Orbitron (Digital/Tech), Nunito (Body) & JetBrains Mono (Code) -->
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Nunito:wght@400;600;700;800&family=Orbitron:wght@400;600;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        /* === THE TIME HACKER VARIABLES (SMARTWATCH THEME) === */
+        :root {
+            --bg-deep: #020617;        /* Slate 950 - Deep Space */
+            --bg-panel: rgba(15, 23, 42, 0.6); /* Slate 900 Glass */
+            --accent-purple: #8b5cf6;  /* Violet 500 (Time/Clocks) */
+            --accent-mint: #10b981;    /* Emerald 500 (Actions/Verbs) */
+            --accent-pink: #d946ef;    /* Pink 500 (Alerts/Errors) */
+            --text-main: #f8fafc;      /* Slate 50 */
+            --text-muted: #94a3b8;     /* Slate 400 */
+        }
+
+        body { 
+            font-family: 'Nunito', sans-serif; 
+            background-color: #000;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        h1, h2, h3, .font-tech { font-family: 'Orbitron', sans-serif; letter-spacing: 0.05em; }
+        .font-code { font-family: 'JetBrains Mono', monospace; }
+
+        /* === MOBILE PHONE MOCKUP === */
+        #mobile-frame {
+            width: 100%;
+            max-width: 430px; /* iPhone Max size */
+            height: 100dvh;
+            background-color: var(--bg-deep);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 0 50px rgba(139, 92, 246, 0.15);
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(139, 92, 246, 0.08), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(16, 185, 129, 0.08), transparent 25%);
+        }
+
+        @media (min-width: 431px) {
+            #mobile-frame {
+                height: 90vh;
+                border-radius: 40px;
+                border: 12px solid #0f172a;
+                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.9), inset 0 0 0 2px #334155;
+            }
+        }
+
+        /* Fake Notch */
+        .phone-notch {
+            display: none;
+        }
+        @media (min-width: 431px) {
+            .phone-notch {
+                display: block;
+                position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+                width: 150px; height: 30px; background-color: #0f172a;
+                border-bottom-left-radius: 20px; border-bottom-right-radius: 20px; z-index: 50;
+            }
+        }
+
+        /* Status Bar */
+        .status-bar {
+            height: 44px; display: flex; justify-content: space-between; align-items: center;
+            padding: 0 24px; font-size: 12px; font-weight: 600; z-index: 40; position: relative; color: var(--text-main);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* BUTTONS */
+        .btn-purple {
+            background: linear-gradient(135deg, #a855f7, #8b5cf6); color: white; border-radius: 16px;
+            font-family: 'Orbitron', sans-serif; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.1em; transition: all 0.3s ease; border: none; cursor: pointer;
+            box-shadow: 0 8px 20px rgba(139, 92, 246, 0.3);
+        }
+        .btn-purple:hover { transform: translateY(-3px); box-shadow: 0 12px 25px rgba(139, 92, 246, 0.5); }
+        .btn-purple:active { transform: scale(0.96); }
+
+        .btn-outline {
+            background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); color: var(--text-main); border-radius: 16px;
+            font-family: 'Orbitron', sans-serif; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.1em; transition: all 0.2s ease; cursor: pointer;
+        }
+        .btn-outline:active { background: rgba(255,255,255,0.1); border-color: var(--accent-purple); transform: scale(0.96); }
+
+        /* QUIZ OPTIONS (MCQ) */
+        .mcq-option {
+            background: var(--bg-panel); border: 1px solid rgba(255,255,255,0.05);
+            transition: all 0.2s ease; cursor: pointer; display: flex; align-items: center; padding: 1.2rem; border-radius: 16px;
+            width: 100%; text-align: left; box-shadow: 0 4px 15px rgba(0,0,0,0.2); backdrop-filter: blur(8px);
+        }
+        .mcq-option:active:not(.locked-check) { transform: scale(0.98); border-color: var(--accent-purple); background: rgba(139, 92, 246, 0.05); }
+        .mcq-option.correct { background: rgba(16, 185, 129, 0.1); border-color: var(--accent-mint); color: var(--accent-mint); box-shadow: 0 0 15px rgba(16, 185, 129, 0.2); }
+        .mcq-option.wrong { background: rgba(217, 70, 239, 0.1); border-color: var(--accent-pink); color: var(--accent-pink); box-shadow: 0 0 15px rgba(217, 70, 239, 0.2);}
+
+        /* ANIMATIONS */
+        .fade-in { animation: fadeIn 0.4s ease forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .shake { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
+        @keyframes shake { 10%, 90% { transform: translate3d(-2px, 0, 0); } 20%, 80% { transform: translate3d(3px, 0, 0); } 30%, 50%, 70% { transform: translate3d(-5px, 0, 0); } 40%, 60% { transform: translate3d(5px, 0, 0); } }
+
+        /* PROGRESS BAR */
+        .progress-container { width: 100%; height: 4px; background: rgba(255,255,255,0.05); overflow: hidden; border-radius: 10px; margin-bottom: 24px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);}
+        .progress-fill { height: 100%; background: var(--accent-purple); transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 10px var(--accent-purple);}
+
+        /* GLOW TEXT */
+        .text-glow-purple { text-shadow: 0 0 15px rgba(139, 92, 246, 0.6); }
+
+        #confetti-canvas { position: absolute; inset: 0; pointer-events: none; z-index: 9999; }
+    </style>
+</head>
+<body>
+
+    <!-- MOBILE CONTAINER -->
+    <div id="mobile-frame">
+        <canvas id="confetti-canvas"></canvas>
+        <div class="phone-notch"></div>
+        
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <span id="clock">09:41</span>
+            <div class="flex items-center gap-2">
+                <i class="fas fa-signal text-[10px]"></i>
+                <i class="fas fa-wifi text-[10px]"></i>
+                <i class="fas fa-battery-full text-xs text-[var(--accent-mint)]"></i>
+            </div>
+        </div>
+
+        <!-- START SCREEN (BRIEFING) -->
+        <!-- Fixed: Added overflow-y-auto and flex-col layout to ensure start button is always visible -->
+        <div id="screen-start" class="flex-grow flex flex-col p-8 relative z-10 animate-in fade-in overflow-y-auto">
+            
+            <div class="my-auto flex flex-col items-center w-full">
+                <div class="w-24 h-24 rounded-full bg-[var(--accent-purple)]/10 mb-8 flex items-center justify-center border border-[var(--accent-purple)]/30 shadow-[0_0_30px_rgba(139,92,246,0.2)_inset] animate-pulse">
+                    <i class="fas fa-stopwatch text-5xl text-[var(--accent-purple)]"></i>
+                </div>
+                
+                <div class="text-center space-y-3 w-full">
+                    <p class="text-[var(--accent-purple)] font-bold text-[10px] tracking-[0.5em] uppercase font-code bg-[var(--accent-purple)]/10 px-4 py-1.5 rounded inline-block border border-[var(--accent-purple)]/20 shadow-[0_0_15px_rgba(139,92,246,0.1)]">Homework Protocol</p>
+                    <h1 class="text-5xl font-black text-white leading-none tracking-tighter uppercase font-tech mt-4">Chronos<br><span class="text-[var(--accent-mint)] text-shadow-sm">Sync</span></h1>
+                    <p class="text-sm text-gray-400 mt-4 leading-relaxed px-2 font-bold">Complete this 15-node evaluation to prove your routine and timing skills.</p>
+                </div>
+                
+                <div class="w-full bg-black/40 border border-gray-800 p-6 rounded-2xl mt-8 text-left shadow-lg backdrop-blur-md">
+                    <p class="text-[10px] text-[var(--accent-mint)] font-code uppercase tracking-widest border-b border-gray-800 pb-3 mb-4 font-bold">> SYNC DATA</p>
+                    <ul class="text-sm text-gray-300 font-code space-y-3 font-bold">
+                        <li class="flex items-center"><div class="w-6 h-6 rounded bg-[var(--accent-purple)]/10 border border-[var(--accent-purple)]/20 flex items-center justify-center mr-3"><i class="fas fa-check text-[var(--accent-purple)] text-[10px]"></i></div> Nodes: 15</li>
+                        <li class="flex items-center"><div class="w-6 h-6 rounded bg-[var(--accent-purple)]/10 border border-[var(--accent-purple)]/20 flex items-center justify-center mr-3"><i class="fas fa-check text-[var(--accent-purple)] text-[10px]"></i></div> Focus: Routine & S</li>
+                        <li class="flex items-center"><div class="w-6 h-6 rounded bg-[var(--accent-purple)]/10 border border-[var(--accent-purple)]/20 flex items-center justify-center mr-3"><i class="fas fa-check text-[var(--accent-purple)] text-[10px]"></i></div> Diff: A1 Core</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Button pushed to bottom but accessible via scroll on small screens -->
+            <button onclick="startHomework()" class="btn-purple w-full py-4 text-base mt-8 mb-4 flex-shrink-0">
+                Initialize Sync
+            </button>
+        </div>
+
+        <!-- QUIZ SCREEN -->
+        <div id="screen-quiz" class="hidden flex-grow flex-col relative z-10 h-full overflow-hidden">
+            <!-- Header -->
+            <div class="pt-6 pb-2 px-6 flex justify-between items-center z-20 flex-shrink-0">
+                <div class="flex flex-col">
+                    <span class="text-[9px] font-bold text-gray-500 uppercase tracking-[0.2em] font-code">Sync Progress</span>
+                    <span class="text-sm font-black text-[var(--accent-purple)] font-code" id="progress-text">01 / 15</span>
+                </div>
+                <div class="flex items-center gap-2 bg-gray-900 px-3 py-1.5 rounded border border-gray-800 shadow-sm">
+                    <i class="fas fa-bolt text-[var(--accent-mint)] text-[10px]"></i>
+                    <span class="text-xs font-black text-white font-code" id="score-text">000</span>
+                </div>
+            </div>
+            
+            <div class="px-6 w-full flex-shrink-0"><div class="progress-container"><div id="progress-bar" class="progress-fill" style="width: 0%;"></div></div></div>
+
+            <!-- Question Area (Added large bottom padding so options aren't covered by Next button) -->
+            <div class="flex-grow overflow-y-auto px-6 pb-32 flex flex-col" id="question-container">
+                <!-- Injected via JS -->
+            </div>
+
+            <!-- Next Button Container -->
+            <div class="p-6 bg-gradient-to-t from-[var(--bg-deep)] via-[var(--bg-deep)] to-transparent mt-auto hidden absolute bottom-0 left-0 w-full z-30" id="next-btn-container">
+                <button onclick="nextQuestion()" class="btn-purple w-full py-4 text-base shadow-[0_0_20px_rgba(139,92,246,0.3)] flex justify-center items-center gap-2">
+                    Next Node <i class="fas fa-chevron-right text-sm"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- RESULT SCREEN -->
+        <div id="screen-result" class="hidden flex-grow flex-col p-8 relative z-10 animate-in fade-in overflow-y-auto">
+            <div class="my-auto flex flex-col items-center text-center w-full">
+                <div id="result-icon" class="w-32 h-32 rounded-full bg-[var(--accent-mint)]/10 mb-8 flex items-center justify-center border border-[var(--accent-mint)]/30 shadow-[0_0_40px_rgba(16,185,129,0.2)]">
+                    <i class="fas fa-check-circle text-6xl text-[var(--accent-mint)]"></i>
+                </div>
+                
+                <h2 class="text-4xl font-black text-white tracking-tighter uppercase font-tech mb-3" id="result-title">Time Hacked</h2>
+                <p class="text-[10px] text-[var(--accent-purple)] font-code font-bold uppercase tracking-widest border border-[var(--accent-purple)]/30 px-4 py-1.5 bg-[var(--accent-purple)]/10 rounded mb-10 shadow-[0_0_15px_rgba(139,92,246,0.2)]" id="result-rank">Rank: Time Hacker</p>
+                
+                <div class="w-full bg-black/40 border border-gray-800 rounded-2xl py-8 mb-12 shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)]">
+                    <p class="text-xs text-gray-500 uppercase tracking-[0.3em] font-code font-bold mb-2">Final Score</p>
+                    <p class="text-6xl font-black text-white font-tech text-glow-purple" id="final-score">15/15</p>
+                </div>
+            </div>
+            
+            <button onclick="location.reload()" class="btn-outline w-full py-4 text-sm mt-8 mb-4 border-2 border-gray-700 flex-shrink-0">
+                Disconnect
+            </button>
+        </div>
+
+    </div>
+
+    <!-- HOMEWORK ENGINE (JS) -->
+    <script>
+        // --- SECURITY & UTILS ---
+        const esc = (s) => s ? String(s).replace(/\\/g, '\\\\').replace(/'/g, '&#39;').replace(/"/g, '&quot;').replace(/\n/g, '\\n').replace(/\r/g, '') : "";
+
+        // -- Mobile Clock Logic --
+        function updateClock() {
+            const now = new Date();
+            let h = now.getHours();
+            let m = now.getMinutes();
+            h = h < 10 ? '0'+h : h;
+            m = m < 10 ? '0'+m : m;
+            document.getElementById('clock').innerText = `${h}:${m}`;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // --- HOMEWORK DATA (15 TIME HACKER QUESTIONS) ---
+        const homeworkData = [
+            {
+                q: "I wake up ___ 7 o'clock.",
+                options: ["at", "in", "on"],
+                correct: 0,
+                hint: "Use this preposition for exact times on the clock."
+            },
+            {
+                q: "She ___ breakfast at 8:00 AM.",
+                options: ["have", "has", "haves"],
+                correct: 1,
+                hint: "Irregular 3rd person form of 'Have'."
+            },
+            {
+                q: "He ___ to work by bus.",
+                options: ["go", "goes", "gos"],
+                correct: 1,
+                hint: "Add 'es' for verbs ending in 'o' (He/She/It)."
+            },
+            {
+                q: "We usually relax ___ the evening.",
+                options: ["at", "in", "on"],
+                correct: 1,
+                hint: "Used for parts of the day: morning, afternoon, and evening."
+            },
+            {
+                q: "My brother ___ lunch at home.",
+                options: ["have", "has", "is"],
+                correct: 1,
+                hint: "Remember the 3rd person 'S' rule! 'My brother' = He."
+            },
+            {
+                q: "What time ___ he wake up?",
+                options: ["do", "does", "is"],
+                correct: 1,
+                hint: "Use the magic auxiliary verb for He/She/It."
+            },
+            {
+                q: "I ___ to sleep at 11:00 PM.",
+                options: ["go", "goes", "going"],
+                correct: 0,
+                hint: "The subject is 'I', so the verb stays normal."
+            },
+            {
+                q: "Mary ___ TV every night.",
+                options: ["watch", "watchs", "watches"],
+                correct: 2,
+                hint: "Verbs ending in 'ch' take 'es'."
+            },
+            {
+                q: "Does he ___ coffee in the morning?",
+                options: ["drink", "drinks", "drinking"],
+                correct: 0,
+                hint: "'Does' acts as a shield! The main verb relaxes."
+            },
+            {
+                q: "John ___ work at 9:00 AM.",
+                options: ["start", "starts", "startes"],
+                correct: 1,
+                hint: "Just add a simple 's' for this verb."
+            },
+            {
+                q: "Which time is 'half past six'?",
+                options: ["06:30", "06:15", "07:30"],
+                correct: 0,
+                hint: "'Half past' means 30 minutes after the hour."
+            },
+            {
+                q: "They study ___ night.",
+                options: ["in", "at", "on"],
+                correct: 1,
+                hint: "This is an exception! We don't use 'in the' for night."
+            },
+            {
+                q: "My boss ___ a lot of emails.",
+                options: ["write", "writes", "writing"],
+                correct: 1,
+                hint: "'My boss' = He/She. Add the 's'."
+            },
+            {
+                q: "What do you do ___ the afternoon?",
+                options: ["at", "in", "on"],
+                correct: 1,
+                hint: "Same preposition rule as 'the morning'."
+            },
+            {
+                q: "He doesn't ___ a shower in the morning.",
+                options: ["take", "takes", "taking"],
+                correct: 0,
+                hint: "Negative sentence! 'Doesn't' protects the main verb."
+            }
+        ];
+
+        // --- APP STATE ---
+        let currentQ = 0;
+        let score = 0;
+        let isLocked = false;
+
+        // --- NAVIGATION ---
+        function showScreen(id) {
+            document.getElementById('screen-start').classList.add('hidden');
+            document.getElementById('screen-quiz').classList.add('hidden');
+            document.getElementById('screen-result').classList.add('hidden');
+            
+            const target = document.getElementById(id);
+            target.classList.remove('hidden');
+            target.classList.add('flex');
+            target.classList.remove('fade-in');
+            void target.offsetWidth; // trigger reflow
+            target.classList.add('fade-in');
+        }
+
+        function startHomework() {
+            // Randomize questions
+            shuffleArray(homeworkData);
+            homeworkData.forEach(q => {
+                const correctText = q.options[q.correct];
+                shuffleArray(q.options);
+                q.correct = q.options.indexOf(correctText);
+            });
+
+            currentQ = 0;
+            score = 0;
+            updateTopBar();
+            renderQuestion();
+            showScreen('screen-quiz');
+        }
+
+        // --- QUIZ LOGIC ---
+        function updateTopBar() {
+            document.getElementById('progress-text').innerText = `${String(currentQ + 1).padStart(2, '0')} / ${homeworkData.length}`;
+            document.getElementById('progress-bar').style.width = `${((currentQ) / homeworkData.length) * 100}%`;
+            document.getElementById('score-text').innerText = String(score * 10).padStart(3, '0');
+        }
+
+        function renderQuestion() {
+            isLocked = false;
+            document.getElementById('next-btn-container').classList.add('hidden');
+            
+            const qData = homeworkData[currentQ];
+            const container = document.getElementById('question-container');
+            const letters = ['A', 'B', 'C'];
+
+            let html = `
+                <div class="mb-8 mt-4 animate-in fade-in">
+                    <h2 class="text-3xl font-black text-white leading-snug font-tech">${qData.q.replace(/\[(.*?)\]/g, '<span class="text-[var(--accent-purple)]">$1</span>')}</h2>
+                </div>
+                <div class="space-y-4 w-full animate-in fade-in" id="options-box" style="animation-delay: 0.1s; animation-fill-mode: both;">
+            `;
+
+            qData.options.forEach((opt, idx) => {
+                html += `
+                    <button class="mcq-option group" onclick="selectOption(${idx}, this)">
+                        <div class="w-10 h-10 rounded border border-gray-700 bg-gray-800 flex items-center justify-center text-sm font-bold text-gray-400 mr-5 font-code group-hover:text-[var(--accent-purple)] group-hover:border-[var(--accent-purple)] transition-colors">${letters[idx]}</div>
+                        <span class="text-lg font-bold text-white font-nunito tracking-wide">${opt}</span>
+                    </button>
+                `;
+            });
+
+            html += `
+                </div>
+                <div id="feedback-box" class="hidden mt-8 p-6 rounded-2xl bg-black/60 border-l-4 border-[var(--accent-mint)] shadow-lg animate-in fade-in mb-8">
+                    <p class="text-[10px] font-bold text-[var(--accent-mint)] uppercase tracking-[0.2em] font-code mb-2">> SYSTEM LOG</p>
+                    <p class="text-base text-gray-300 font-nunito font-bold leading-relaxed">${qData.hint}</p>
+                </div>
+            `;
+
+            container.innerHTML = html;
+            container.scrollTop = 0;
+        }
+
+        function selectOption(selectedIdx, btnEl) {
+            if (isLocked) return;
+            isLocked = true;
+
+            const qData = homeworkData[currentQ];
+            const isCorrect = selectedIdx === qData.correct;
+            const parent = document.getElementById('options-box');
+
+            // Lock buttons
+            Array.from(parent.children).forEach((child, i) => {
+                child.classList.add('locked-check');
+                if (i === qData.correct) {
+                    child.classList.add('correct'); 
+                } else if (i !== qData.correct && i === selectedIdx) {
+                    child.classList.add('wrong'); 
+                } else {
+                    child.classList.add('opacity-40'); 
+                }
+            });
+
+            if (isCorrect) {
+                score++;
+                shootConfetti();
+            } else {
+                // Error shake effect
+                document.getElementById('mobile-frame').classList.add('shake');
+                setTimeout(() => document.getElementById('mobile-frame').classList.remove('shake'), 400);
+                
+                // Show hint if wrong
+                const fbBox = document.getElementById('feedback-box');
+                fbBox.classList.remove('hidden');
+                fbBox.classList.replace('border-[var(--accent-mint)]', 'border-[var(--accent-pink)]');
+                fbBox.querySelector('p').classList.replace('text-[var(--accent-mint)]', 'text-[var(--accent-pink)]');
+            }
+
+            updateTopBar();
+            
+            // Show Next button
+            const nextBtn = document.getElementById('next-btn-container');
+            nextBtn.classList.remove('hidden');
+            nextBtn.style.animation = "fadeIn 0.3s ease forwards";
+            
+            // Scroll down to ensure Next button and feedback are visible
+            setTimeout(() => {
+                document.getElementById('question-container').scrollTo({
+                    top: document.getElementById('question-container').scrollHeight,
+                    behavior: 'smooth'
+                });
+            }, 100);
+        }
+
+        function nextQuestion() {
+            currentQ++;
+            if (currentQ < homeworkData.length) {
+                updateTopBar();
+                renderQuestion();
+            } else {
+                document.getElementById('progress-bar').style.width = `100%`;
+                setTimeout(showResult, 300);
+            }
+        }
+
+        function showResult() {
+            showScreen('screen-result');
+            
+            document.getElementById('final-score').innerText = `${score}/15`;
+            
+            const rankEl = document.getElementById('result-rank');
+            const iconEl = document.getElementById('result-icon');
+            const titleEl = document.getElementById('result-title');
+
+            const percentage = score / homeworkData.length;
+
+            if (percentage === 1) {
+                titleEl.innerText = "Perfect Sync";
+                rankEl.innerText = "Rank: Time Hacker";
+                rankEl.className = "text-[10px] text-[var(--bg-deep)] font-bold font-code uppercase tracking-[0.2em] border border-[var(--accent-mint)] px-4 py-1.5 bg-[var(--accent-mint)] rounded mb-10 shadow-[0_0_15px_rgba(16,185,129,0.4)]";
+                iconEl.innerHTML = '<i class="fas fa-microchip text-6xl text-[var(--accent-mint)]"></i>';
+                iconEl.className = "w-32 h-32 rounded-full bg-[var(--accent-mint)]/10 mb-8 flex items-center justify-center border border-[var(--accent-mint)]/30 shadow-[0_0_40px_rgba(16,185,129,0.3)]";
+                shootConfetti(); setTimeout(shootConfetti, 500);
+            } else if (percentage >= 0.7) {
+                titleEl.innerText = "Data Uploaded";
+                rankEl.innerText = "Rank: Productive User";
+                rankEl.className = "text-[10px] text-[var(--bg-deep)] font-code font-bold uppercase tracking-[0.2em] border border-[var(--accent-purple)] px-4 py-1.5 bg-[var(--accent-purple)] rounded mb-10 shadow-[0_0_15px_rgba(139,92,246,0.4)]";
+                iconEl.className = "w-32 h-32 rounded-full bg-[var(--accent-purple)]/10 mb-8 flex items-center justify-center border border-[var(--accent-purple)]/30 shadow-[0_0_40px_rgba(139,92,246,0.3)]";
+                iconEl.innerHTML = '<i class="fas fa-check text-6xl text-[var(--accent-purple)]"></i>';
+            } else {
+                titleEl.innerText = "Sync Failed";
+                rankEl.innerText = "Rank: Lagging Clock";
+                rankEl.className = "text-[10px] text-white font-code font-bold uppercase tracking-[0.2em] border border-gray-600 px-4 py-1.5 bg-gray-800 rounded mb-10 shadow-sm";
+                iconEl.className = "w-32 h-32 rounded-full bg-gray-900 mb-8 flex items-center justify-center border border-gray-700 shadow-xl";
+                iconEl.innerHTML = '<i class="fas fa-exclamation-triangle text-6xl text-gray-500"></i>';
+            }
+        }
+
+        // --- UTILS ---
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        // --- CONFETTI ENGINE (TECH STYLE) ---
+        function shootConfetti() {
+            const cCanvas = document.getElementById('confetti-canvas'); 
+            const cCtx = cCanvas.getContext('2d');
+            const frame = document.getElementById('mobile-frame');
+            cCanvas.width = frame.offsetWidth; 
+            cCanvas.height = frame.offsetHeight;
+            
+            const pieces = []; 
+            const colors = ['#8b5cf6', '#10b981', '#d946ef', '#f8fafc'];
+            
+            for(let i=0; i<40; i++) {
+                pieces.push({ 
+                    x: cCanvas.width / 2, 
+                    y: cCanvas.height / 2, 
+                    vx: (Math.random() - 0.5) * 16, 
+                    vy: (Math.random() - 1) * 16 - 4, 
+                    size: Math.random() * 8 + 4, 
+                    color: colors[Math.floor(Math.random() * colors.length)], 
+                    rot: Math.random() * 360, 
+                    rotSpeed: (Math.random() - 0.5) * 10 
+                });
+            }
+            
+            let animationId;
+            function animateC() {
+                cCtx.clearRect(0, 0, cCanvas.width, cCanvas.height); 
+                let active = false;
+                pieces.forEach(p => {
+                    p.x += p.vx; 
+                    p.y += p.vy; 
+                    p.vy += 0.5; // gravity
+                    p.rot += p.rotSpeed; 
+                    if(p.y < cCanvas.height) active = true;
+                    
+                    cCtx.save(); 
+                    cCtx.translate(p.x, p.y); 
+                    cCtx.rotate(p.rot * Math.PI / 180); 
+                    cCtx.fillStyle = p.color; 
+                    // Square confetti for tech look
+                    cCtx.fillRect(-p.size/2, -p.size/2, p.size, p.size); 
+                    cCtx.restore(); 
+                });
+                
+                if(active) {
+                    animationId = requestAnimationFrame(animateC); 
+                } else {
+                    cCtx.clearRect(0, 0, cCanvas.width, cCanvas.height);
+                }
+            }
+            animateC();
+        }
+    </script>
+</body>
+</html>
